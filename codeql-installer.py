@@ -107,10 +107,9 @@ def create_env():
             )
         except OSError:
             print(
-                "Error: symlinks creation failed. Try to run script as "
+                f"Error: {dir_in_queries} symlink creation failed. Try to run script as "
                 f"{'administrator' if os_name == 'windows' else 'root'}"
             )
-            exit(1)
 
 
 if __name__ == '__main__':
