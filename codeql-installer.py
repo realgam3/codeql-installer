@@ -65,6 +65,7 @@ def install_cli():
         ]).splitlines()[0].decode()).group(1)
 
     if codeql_installed_version != codeql_latest_version:
+        print(f"Downloading {cli_zip} successfully", file=sys.stderr)
         with requests.get(url_map[cli_zip], stream=True) as res:
             res.raise_for_status()
             with tempfile.TemporaryFile(suffix=".zip") as f:
