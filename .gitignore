@@ -127,3 +127,14 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# Pycharm project settings
+.idea/
+Pipfile.lock
+
+# CodeQL
+codeql/
+codeql-repo/
+codeql-go/
+databases/
+queries/
