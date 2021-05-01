@@ -3,7 +3,6 @@ import re
 import os
 import sys
 import json
-import shutil
 import zipfile
 import requests
 import tempfile
@@ -98,17 +97,21 @@ def create_env():
 
     for dir_in_queries, dir_in_codeql_home in dir_map.items():
         dir_path = path.join(queries_repo_path, dir_in_queries)
-        if path.exists(dir_path) and len(os.listdir(dir_path)):
-            continue
+        if path.islink(dir_path) and not path.exists(dir_path):
+            os.unlink(dir_path)
+        elif path.isdir(dir_path) and path.exists(dir_path):
+            if len(os.listdir(dir_path)):
+                continue
+
+            os.rmdir(dir_path)
 
         print(f"Creating symlink for {dir_in_queries}", file=sys.stderr)
-        shutil.rmtree(path.join(queries_repo_path, dir_in_queries), ignore_errors=True)
         try:
             os.symlink(
                 src=path.join(__folder__, dir_in_codeql_home),
                 dst=dir_path
             )
-        except OSError:
+        except OSError as ex:
             print(
                 f"Error: Symlink {dir_in_queries} creation failed. Try to run script as "
                 f"{'administrator' if os_name == 'windows' else 'root'}",
