@@ -101,7 +101,8 @@ def create_env():
             continue
 
         print(f"Creating symlink for {dir_in_queries}", file=sys.stderr)
-        os.rmdir(path.join(queries_repo_path, dir_in_queries))
+        if path.exists(dir_path):
+            os.rmdir(path.join(queries_repo_path, dir_in_queries))
         try:
             os.symlink(
                 src=path.join(__folder__, dir_in_codeql_home),
