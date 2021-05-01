@@ -82,7 +82,6 @@ def install_cli():
 
 def create_env():
     # Create Databases Folder
-    print(f"Creating folder databases", file=sys.stderr)
     os.makedirs(path.join(__folder__, "databases"), exist_ok=True)
 
     # Create Queries Folder
