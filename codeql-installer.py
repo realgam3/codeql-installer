@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 import re
 import os
-import sys
 import json
+import logging
 import zipfile
 import requests
 import tempfile
@@ -16,6 +16,7 @@ from urllib.parse import urljoin
 __folder__ = path.abspath(path.dirname(__file__))
 
 os_name = platform.system().lower()
+logger = logging.getLogger(__name__)
 github_url = "https://github.com/"
 repos = {
     "codeql-repo": urljoin(github_url, "/github/codeql.git"),
@@ -37,10 +38,10 @@ def install_repos():
     for repo, url in repos.items():
         repo_path = path.join(__folder__, repo)
         if not path.exists(repo_path):
-            print(f"Cloning repo {path.basename(url)}", file=sys.stderr)
+            logger.info(f"Cloning repo {path.basename(url)}")
             Repo.clone_from(url, repo_path)
             continue
-        print(f"Pulling repo {path.basename(url)}", file=sys.stderr)
+        logger.info(f"Pulling repo {path.basename(url)}")
         Repo(repo_path).remotes[0].pull()
 
 
@@ -66,18 +67,18 @@ def install_cli():
         ]).splitlines()[0].decode()).group(1)
 
     if codeql_installed_version != codeql_latest_version:
-        print(f"Downloading {cli_zip} successfully", file=sys.stderr)
+        logger.info(f"Downloading {cli_zip}")
         with requests.get(url_map[cli_zip], stream=True) as res:
             res.raise_for_status()
             with tempfile.TemporaryFile(suffix=".zip") as f:
                 for chunk in res.iter_content(chunk_size=8192):
                     f.write(chunk)
                 f.seek(0)
-                print(f"Downloaded {cli_zip} successfully", file=sys.stderr)
+                logger.info(f"Downloaded {cli_zip} successfully")
                 with zipfile.ZipFile(file=f) as zf:
-                    print(f"Extracting {cli_zip}", file=sys.stderr)
+                    logger.info(f"Extracting {cli_zip}")
                     zf.extractall(__folder__)
-                print(f"Extracted {cli_zip} successfully", file=sys.stderr)
+                logger.info(f"Extracted {cli_zip} successfully")
 
 
 def create_env():
@@ -91,7 +92,7 @@ def create_env():
         "codeql-go": "codeql-go"
     }
     if not path.exists(queries_repo_path):
-        print(f"Cloning repo {path.basename(queries_repo_url)}", file=sys.stderr)
+        logger.info(f"Cloning repo {path.basename(queries_repo_url)}")
         Repo.clone_from(queries_repo_url, queries_repo_path)
 
     for dir_in_queries, dir_in_codeql_home in dir_map.items():
@@ -104,21 +105,23 @@ def create_env():
 
             os.rmdir(dir_path)
 
-        print(f"Creating symlink for {dir_in_queries}", file=sys.stderr)
+        logger.info(f"Creating symlink for {dir_in_queries}")
         try:
             os.symlink(
                 src=path.join(__folder__, dir_in_codeql_home),
                 dst=dir_path
             )
-        except OSError as ex:
-            print(
-                f"Error: Symlink {dir_in_queries} creation failed. Try to run script as "
-                f"{'administrator' if os_name == 'windows' else 'root'}",
-                file=sys.stderr
+        except OSError:
+            logger.error(
+                f"Symlink {dir_in_queries} creation failed. Try to run script as "
+                f"{'administrator' if os_name == 'windows' else 'root'}"
             )
 
 
 if __name__ == '__main__':
+    logging.basicConfig(level=logging.INFO,
+                        format='[%(levelname)s] %(message)s',
+                        datefmt='%d-%m-%y %H:%M:%S')
     install_repos()
     install_cli()
     create_env()
