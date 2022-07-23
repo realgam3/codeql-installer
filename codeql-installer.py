@@ -51,7 +51,6 @@ def install_cli():
 
     urls = html.find_all("a", attrs={
         "rel": "nofollow",
-        "class": "flex-items-center",
     })
     url_map = {}
     for url in urls:
