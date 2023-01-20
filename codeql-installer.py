@@ -55,7 +55,7 @@ def install_cli():
         url = asset["browser_download_url"]
         file_name = path.basename(url)
         url_map[file_name] = url
-    print(url_map)
+
     version_regex = re.compile(r"(\d+\.\d+\.\d+)")
     codeql_latest_version = version_regex.search(version).group(1)
     codeql_installed_version = ""
