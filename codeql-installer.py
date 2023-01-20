@@ -10,7 +10,6 @@ import platform
 import subprocess
 from os import path
 from git import Repo
-from bs4 import BeautifulSoup
 from urllib.parse import urljoin
 
 __folder__ = path.abspath(path.dirname(__file__))
@@ -18,12 +17,13 @@ __folder__ = path.abspath(path.dirname(__file__))
 os_name = platform.system().lower()
 logger = logging.getLogger(__name__)
 github_url = "https://github.com/"
+github_api_url = "https://api.github.com/"
 repos = {
     "codeql-repo": urljoin(github_url, "/github/codeql.git"),
     "codeql-go": urljoin(github_url, "/github/codeql-go.git"),
 }
 queries_repo_url = urljoin(github_url, "/github/vscode-codeql-starter.git")
-cli = urljoin(github_url, "/github/codeql-cli-binaries/releases/latest")
+cli = urljoin(github_api_url, "/repos/github/codeql-cli-binaries/releases/latest")
 cli_path = path.join(__folder__, "codeql")
 cli_zip = "codeql-linux64.zip"
 cli_exe = "codeql"
@@ -47,18 +47,18 @@ def install_repos():
 
 def install_cli():
     res = requests.get(cli)
-    html = BeautifulSoup(res.text, features="html.parser")
+    res.raise_for_status()
+    res_json = res.json()
 
-    urls = html.find_all("a", attrs={
-        "rel": "nofollow",
-    })
+    version = res_json["tag_name"]
     url_map = {}
-    for url in urls:
-        url_map[url.text.strip()] = urljoin(github_url, url.get("href"))
-
-    data_hydro_click = json.loads(html.select_one("a[data-hydro-click]").get("data-hydro-click"))
+    for asset in res_json["assets"]:
+        url = asset["browser_download_url"]
+        file_name = path.basename(url)
+        url_map[file_name] = url
+    print(url_map)
     version_regex = re.compile(r"(\d+\.\d+\.\d+)")
-    codeql_latest_version = version_regex.search(path.basename(data_hydro_click["payload"]["originating_url"])).group(1)
+    codeql_latest_version = version_regex.search(version).group(1)
     codeql_installed_version = ""
     if path.exists(cli_path):
         codeql_installed_version = version_regex.search(subprocess.check_output([

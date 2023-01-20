@@ -1,3 +1,2 @@
 requests>=2.25.1
 GitPython>=3.1.14
-beautifulsoup4>=4.9.3
